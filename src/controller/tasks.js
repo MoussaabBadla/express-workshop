@@ -5,7 +5,7 @@ import Task from "../models/task.js";
 
 export async function getTasks(req, res) {
     try {
-        const tasks = Task.find({});
+        const tasks = await Task.find();
         if (!tasks) {
             return res.status(404).json({ message: 'No tasks found' });
         }
@@ -22,7 +22,11 @@ export async function getTasks(req, res) {
 export async function createTask(req, res) {
     try {
         const { name, user } = req.body;
-        const task = Task.create({ name, user });
+        const task = new Task({ name, user });
+        await task.save();
+        if (!task) {
+            return res.status(400).json({ message: 'Task not created' });
+        }
         return res.status(201).json(task);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -34,7 +38,7 @@ export async function updateTask(req, res) {
     try {
         const { id } = req.params;
         const { name, completed } = req.body;
-        const  task = Task.findByIdAndUpdate(id, { name, completed });
+        const  task = await Task.findByIdAndUpdate(id, { name, completed } , {new: true});
         return res.status(200).json(task);
 
     } catch (error) {
@@ -46,12 +50,12 @@ export async function updateTask(req, res) {
 export  async function deleteTask(req, res) {
     try {
         const { id } = req.params;
-        Task.findByIdAndDelete(id);
-        return res.status(204);
-        
+        console.log(id);
+        await Task.findByIdAndDelete(id);
+        console.log(id);
+         res.status(204).json({ message: 'Task deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
-        
     };
 }
 
@@ -59,7 +63,7 @@ export  async function deleteTask(req, res) {
 export async function  getTask (req , res) {
     try {
         const {id } = req.params;
-        const tasks = Task.findById(id);
+        const tasks = await Task.findById(id);
         if (!tasks) {
             return res.status(404).json({ message: 'No tasks found' });
         }
@@ -75,7 +79,7 @@ export  async function  getTaskByUser (req , res) {
     try {
         const {userId} = req.params;
 
-        const tasks = Task.find({user: userId});
+        const tasks = await Task.find({user: userId}).populate('user');
         
         if (!tasks) {
             return res.status(404).json({ message: 'No tasks found' });
