@@ -5,7 +5,7 @@ import Task from "../models/task.js";
 
 export async function getTasks(req, res) {
     try {
-        const tasks = await Task.find();
+        const tasks = await Task.find().populate("user", "-password");
         if (!tasks) {
             return res.status(404).json({ message: 'No tasks found' });
         }
@@ -21,8 +21,9 @@ export async function getTasks(req, res) {
 
 export async function createTask(req, res) {
     try {
-        const { name, user } = req.body;
-        const task = new Task({ name, user });
+        const  user = req.user;
+        const { name } = req.body;
+        const task = new Task({ name, user:user._id });
         await task.save();
         if (!task) {
             return res.status(400).json({ message: 'Task not created' });
